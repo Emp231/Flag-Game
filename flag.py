@@ -35,6 +35,9 @@ class ImageRevealer:
 
         self.reveal_button = tk.Button(root, text="Reveal More", command=self.reveal_more)
         self.reveal_button.pack()
+
+        self.guess_button = tk.Button(root, text="Guess", command=self.open_guess_window)
+        self.guess_button.pack()
     
     def update_image(self):
         region = self.regions_to_reveal[len(self.regions_to_reveal) - 1]
@@ -58,8 +61,7 @@ class ImageRevealer:
             self.regions_to_reveal.append((x_pos, y_pos, self.reveal_width+x_pos, self.reveal_height+y_pos))
             self.update_image()
         else:
-            self.reveal_button.config(state=tk.DISABLED)  # Disable button when all regions are revealed
-
+            self.reveal_button.config(state=tk.DISABLED)
     def gen_reveal(self):
         x_pos = 0
         y_pos = 0
@@ -77,7 +79,42 @@ class ImageRevealer:
               break
         
         return x_pos, y_pos
+    
+    def open_guess_window(self):
+        guess_window = tk.Toplevel(self.root)
+        guess_window.title("Guess Window")
 
+        guess_image = Image.open("World_Map.png")
+        guess_photo = ImageTk.PhotoImage(guess_image)
+
+        guess_canvas = tk.Canvas(guess_window, width=guess_image.width, height=guess_image.height)
+        guess_canvas.pack()
+        guess_canvas.create_image(0, 0, anchor=tk.NW, image=guess_photo)
+
+        self.pin_id = None
+        self.guess_canvas = guess_canvas
+
+        def on_click(event):
+            if self.pin_id is not None:
+                guess_canvas.delete(self.pin_id)
+            
+            x, y = event.x, event.y
+            self.pin_id = guess_canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill="red", outline="black")
+
+        guess_canvas.bind("<Button-1>", on_click)
+
+        guess_window.image_refs = [guess_photo]
+
+        def on_click(event):
+            if self.pin_id is not None:
+                guess_canvas.delete(self.pin_id)
+            
+            x, y = event.x, event.y
+            self.pin_id = guess_canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill="red", outline="black")
+
+        guess_canvas.bind("<Button-1>", on_click)
+
+        guess_window.image_refs = [guess_photo]
     
 def rectangles_overlap(x1, y1, x2, y2, width, height):
     if x1 + width <= x2 or x2 + width <= x1:
