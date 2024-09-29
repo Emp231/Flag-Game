@@ -80,41 +80,6 @@ class ImageRevealer:
         
         return x_pos, y_pos
     
-    def open_guess_window(self):
-        guess_window = tk.Toplevel(self.root)
-        guess_window.title("Guess Window")
-
-        guess_image = Image.open("World_Map.png")
-        guess_photo = ImageTk.PhotoImage(guess_image)
-
-        guess_canvas = tk.Canvas(guess_window, width=guess_image.width, height=guess_image.height)
-        guess_canvas.pack()
-        guess_canvas.create_image(0, 0, anchor=tk.NW, image=guess_photo)
-
-        self.pin_id = None
-        self.guess_canvas = guess_canvas
-
-        def on_click(event):
-            if self.pin_id is not None:
-                guess_canvas.delete(self.pin_id)
-            
-            x, y = event.x, event.y
-            self.pin_id = guess_canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill="red", outline="black")
-
-        guess_canvas.bind("<Button-1>", on_click)
-
-        guess_window.image_refs = [guess_photo]
-
-        def on_click(event):
-            if self.pin_id is not None:
-                guess_canvas.delete(self.pin_id)
-            
-            x, y = event.x, event.y
-            self.pin_id = guess_canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill="red", outline="black")
-
-        guess_canvas.bind("<Button-1>", on_click)
-
-        guess_window.image_refs = [guess_photo]
     
 def rectangles_overlap(x1, y1, x2, y2, width, height):
     if x1 + width <= x2 or x2 + width <= x1:
