@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clickable World Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <button>Guess</button>
+</body>
+<h1>Interactive World Map</h1>
+<div id="map"></div>
+<div id="log">Click on a country to log its name.</div>
+
+<script>
+    // Create the map and set the initial view (latitude, longitude, zoom level)
+    let numberOfGuesses = 8;
+    let countriesGuessed = [];
+    let curGuess;
+
+    const map = L.map('map', {
+        maxBounds: [[-90, -180], [90, 180]],  // Limit the map to the world bounds
+        maxBoundsViscosity: 5,  // How "sticky" the bounds are
+        worldCopyJump: true       // Prevent endless horizontal scrolling by copying the world map
+    }).setView([20, 0], 2);
+
+    // Add a tile layer to the map (OpenStreetMap tiles)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Function to log the country name when clicked
+    function onCountryClick(e) {
+        const countryName = e.target.feature.properties.ADMIN;
+        document.getElementById('log').innerHTML = `You clicked on: ${countryName}`;
+        curGuess = `${countryName}`;
+
+        e.target.setStyle({
+                fillColor: 'orange'
+        });
+
+    }
+    // Style for each country
+    function style(feature) {
+        return {
+            fillColor: '#ccc',
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            fillOpacity: 0.7
+        };
+    }
+
+    // Function to handle hover effects (optional)
+    function highlightFeature(e) {
+        const layer = e.target;
+        const countryName = e.target.feature.properties.ADMIN;
+        layer.setStyle({
+            weight: 3,
+            color: '#666',
+            fillColor: '#ffcc00',
+            fillOpacity: 0.9
+        });
+
+        if (countriesGuessed.includes(countryName)) {
+          layer.setStyle({
+            weight: 3,
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 0.7
+          });
+        }
+
+
+    }
+
+    // Reset hover effects when not hovering
+    function resetHighlight(e) {
+        geojson.resetStyle(e.target);
+        
+    }
+    
+    function style(feature) {
+            const countryName = feature.properties.ADMIN;
+
+            // If country is in the guessed list, color it red
+            if (countriesGuessed.includes(countryName)) {
+                return {
+                    fillColor: 'red',
+                    weight: 2,
+                    opacity: 1,
+                    color: 'white',
+                    fillOpacity: 0.7
+                };
+
+            }
+            else {
+                return {
+                    fillColor: '#ccc',
+                    weight: 2,
+                    opacity: 1,
+                    color: 'white',
+                    fillOpacity: 0.7
+                };
+            }
+    }
+
+    
+    // Attach event listeners to each country
+    function onEachFeature(feature, layer) {
+        layer.on({
+            click: onCountryClick,
+            mouseover: highlightFeature,
+            mouseout: resetHighlight
+        });
+    }
+
+    function onButtonClick() {
+      if (curGuess.length > 0 && !countriesGuessed.includes(curGuess)) {
+        countriesGuessed.push(`${curGuess}`);
+        geojson.eachLayer(function(layer) {
+                    // If the country is in the guessed list, update its style to red
+                    if (countriesGuessed.includes(layer.feature.properties.ADMIN)) {
+                        layer.setStyle({
+                            fillColor: 'red'
+                        });
+                    }
+        });
+      }
+    }
+
+    const button = document.querySelector('button');
+    button.addEventListener('click', onButtonClick);
+
+    // Load GeoJSON data and add it to the map
+    fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+        .then(response => response.json())
+        .then(data => {
+            geojson = L.geoJson(data, {
+                style: style,
+                onEachFeature: onEachFeature
+            }).addTo(map);
+        });
+</script>
+
+</body>
+</html>
